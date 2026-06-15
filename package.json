@@ -1,0 +1,18 @@
+{
+  "name": "aurora-statusline",
+  "version": "1.0.0",
+  "description": "Claude Code status line component — model badge, git info, context window, rate limits, monthly cost",
+  "bin": {
+    "aurora-statusline": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "bun-types": "^1.3.14"
+  }
+}
