@@ -1,9 +1,27 @@
 import type { RenderContext } from './types';
 
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const RED = '\x1b[31m';
+const RESET = '\x1b[0m';
+
+function pickColor(pct: number): string {
+  if (pct > 80) return RED;
+  if (pct >= 60) return YELLOW;
+  return GREEN;
+}
+
+function formatBarLabel(pct: number | null): string {
+  const value = pct ?? 0;
+  const suffix = pct !== null ? `${pct}%` : 'N/A';
+  return `[${makeBar(value)}] ${suffix}`;
+}
+
 export function makeBar(pct: number): string {
   const filled = Math.floor(pct / 10);
   const empty = 10 - filled;
-  return '█'.repeat(filled) + '░'.repeat(empty);
+  const bar = '█'.repeat(filled) + '░'.repeat(empty);
+  return `${pickColor(pct)}${bar}${RESET}`;
 }
 
 export function formatUSD(n: number): string {
@@ -27,12 +45,12 @@ export function render(ctx: RenderContext): string {
   const sessionPct = ctx.rateLimits ? Math.round(ctx.rateLimits.five_hour?.used_percentage ?? 0) : null;
   const weeklyPct = ctx.rateLimits ? Math.round(ctx.rateLimits.seven_day?.used_percentage ?? 0) : null;
 
-  const sessionLabel = sessionPct !== null ? `[${makeBar(sessionPct)}] ${sessionPct}%` : `[${makeBar(0)}] N/A`;
-  const weeklyLabel = weeklyPct !== null ? `[${makeBar(weeklyPct)}] ${weeklyPct}%` : `[${makeBar(0)}] N/A`;
+  const sessionLabel = formatBarLabel(sessionPct);
+  const weeklyLabel = formatBarLabel(weeklyPct);
 
   const line2 = `💬 Session ${sessionLabel} | ${cxtSuffix}`;
   const cacheLabel = ctx.cacheHitPct !== null ? `Cache ${ctx.cacheHitPct}%` : 'Cache N/A';
-  const line3 = `📅 Weekly ${weeklyLabel} | 🎯 ${cacheLabel} | ${costSuffix}`;
+  const line3 = `📅 Weekly ${weeklyLabel} | 🎯 ${cacheLabel} | Session: ${formatUSD(ctx.sessionCost)} | ${costSuffix}`;
 
   return `${line1}\n${line2}\n${line3}`;
 }

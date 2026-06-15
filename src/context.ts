@@ -52,6 +52,7 @@ export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCo
     added: input.cost?.total_lines_added ?? 0,
     removed: input.cost?.total_lines_removed ?? 0,
     monthlyCost,
+    sessionCost: input.cost?.total_cost_usd ?? 0,
     rateLimits: input.rate_limits,
     cacheHitPct: calcCacheHitPct(input.context_window?.current_usage),
   };

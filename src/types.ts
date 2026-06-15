@@ -43,6 +43,7 @@ export interface RenderContext {
   added: number;
   removed: number;
   monthlyCost: number;
+  sessionCost: number;
   rateLimits: InputJSON['rate_limits'];
   cacheHitPct: number | null;
 }
