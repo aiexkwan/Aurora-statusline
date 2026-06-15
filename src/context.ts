@@ -37,7 +37,7 @@ export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCo
 
   return {
     projectName: cwd.split('/').filter(Boolean).at(-1) ?? '',
-    model: resolveModel(input.model?.display_name ?? 'Unknown'),
+    model: resolveModel(input.model?.id, input.model?.display_name ?? 'Unknown'),
     git: gitInfo,
     ctxBar: makeBar(ctxPct),
     ctxPct,

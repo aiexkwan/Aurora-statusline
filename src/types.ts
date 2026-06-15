@@ -1,5 +1,5 @@
 export interface InputJSON {
-  model?: { display_name?: string };
+  model?: { id?: string; display_name?: string };
   workspace?: { current_dir?: string };
   cwd?: string;
   session_id?: string;
