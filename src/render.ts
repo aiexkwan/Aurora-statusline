@@ -11,7 +11,8 @@ export function formatUSD(n: number): string {
 }
 
 export function resolveModel(modelId: string | undefined, displayName: string): string {
-  return modelId ?? displayName;
+  const raw = modelId ?? displayName;
+  return raw.startsWith('claude-') ? raw.slice(7) : raw;
 }
 
 export function render(ctx: RenderContext): string {
