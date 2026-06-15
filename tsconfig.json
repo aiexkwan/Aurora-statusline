@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
-    "types": ["bun-types"],
     "strict": true,
-    "noEmit": true,
+    "declaration": true,
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "skipLibCheck": true
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }

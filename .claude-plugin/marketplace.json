@@ -1,0 +1,13 @@
+{
+  "name": "aurora-statusline",
+  "owner": { "name": "Alex" },
+  "plugins": [
+    {
+      "name": "aurora-statusline",
+      "source": "./",
+      "description": "Rich status line for Claude Code — model badge, git info, context window, rate limits, cache hit ratio, monthly cost",
+      "author": { "name": "Alex" },
+      "license": "MIT"
+    }
+  ]
+}

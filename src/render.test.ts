@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { render, resolveModel } from './render';
 import type { RenderContext } from './types';
 
@@ -46,35 +47,35 @@ const withBranchAndRateLimits: RenderContext = {
 
 describe('resolveModel(modelId, displayName)', () => {
   it('strips claude- prefix from modelId when provided', () => {
-    expect(resolveModel('claude-opus-4-6[1m]', 'Opus 4.6')).toBe('opus-4-6[1m]');
+    assert.strictEqual(resolveModel('claude-opus-4-6[1m]', 'Opus 4.6'), 'opus-4-6[1m]');
   });
 
   it('falls back to displayName when modelId is undefined — Opus', () => {
-    expect(resolveModel(undefined, 'Opus 4.6')).toBe('Opus 4.6');
+    assert.strictEqual(resolveModel(undefined, 'Opus 4.6'), 'Opus 4.6');
   });
 
   it('falls back to displayName when modelId is undefined — Sonnet, not emoji', () => {
-    expect(resolveModel(undefined, 'Sonnet 4.6')).toBe('Sonnet 4.6');
-    expect(resolveModel(undefined, 'Sonnet 4.6')).not.toBe('🥈');
+    assert.strictEqual(resolveModel(undefined, 'Sonnet 4.6'), 'Sonnet 4.6');
+    assert.ok(resolveModel(undefined, 'Sonnet 4.6') !== '🥈');
   });
 
   it('falls back to displayName when modelId is undefined — Haiku, not emoji', () => {
-    expect(resolveModel(undefined, 'Haiku 4.5')).toBe('Haiku 4.5');
-    expect(resolveModel(undefined, 'Haiku 4.5')).not.toBe('🥉');
+    assert.strictEqual(resolveModel(undefined, 'Haiku 4.5'), 'Haiku 4.5');
+    assert.ok(resolveModel(undefined, 'Haiku 4.5') !== '🥉');
   });
 
   it('strips claude- prefix for haiku variant, not the legacy emoji', () => {
-    expect(resolveModel('claude-haiku-4-5-20251001', 'Haiku 4.5')).toBe('haiku-4-5-20251001');
+    assert.strictEqual(resolveModel('claude-haiku-4-5-20251001', 'Haiku 4.5'), 'haiku-4-5-20251001');
   });
 
   it('strips claude- prefix and does not return emoji for Sonnet displayName when modelId is provided', () => {
-    const result = resolveModel('claude-sonnet-4-6', 'Sonnet 4.6');
-    expect(result).toBe('sonnet-4-6');
-    expect(result).not.toBe('🥈');
+    const result: string = resolveModel('claude-sonnet-4-6', 'Sonnet 4.6');
+    assert.strictEqual(result, 'sonnet-4-6');
+    assert.notStrictEqual(result, '🥈');
   });
 
   it('passes through non-claude- prefixed modelId as-is', () => {
-    expect(resolveModel('custom-model-v1', 'Custom')).toBe('custom-model-v1');
+    assert.strictEqual(resolveModel('custom-model-v1', 'Custom'), 'custom-model-v1');
   });
 });
 
@@ -82,96 +83,99 @@ describe('render(ctx)', () => {
   it('renders line 1 with branchLabel when branchLabel is present', () => {
     const output = render(withBranchAndRateLimits);
     const line1 = output.split('\n')[0];
-    expect(line1).toContain('📁 my-project');
-    expect(line1).toContain('sonnet-4-6');
-    expect(line1).toContain('🌱 feat/new-module');
-    expect(line1).toContain('UnCommit: 2');
-    expect(line1).toContain('Commited: 1');
+    assert.ok(line1.includes('📁 my-project'));
+    assert.ok(line1.includes('sonnet-4-6'));
+    assert.ok(line1.includes('🌱 feat/new-module'));
+    assert.ok(line1.includes('UnCommit: 2'));
+    assert.ok(line1.includes('Commited: 1'));
   });
 
   it('renders line 1 without branchLabel segment when branchLabel is empty', () => {
     const output = render(withRateLimits);
     const line1 = output.split('\n')[0];
-    expect(line1).toContain('📁 my-project');
-    expect(line1).toContain('sonnet-4-6');
-    expect(line1).not.toContain('🌱');
-    expect(line1).not.toContain('🌿');
-    expect(line1).toContain('UnCommit: 0');
-    expect(line1).toContain('Commited: 0');
+    assert.ok(line1.includes('📁 my-project'));
+    assert.ok(line1.includes('sonnet-4-6'));
+    assert.ok(!line1.includes('🌱'));
+    assert.ok(!line1.includes('🌿'));
+    assert.ok(line1.includes('UnCommit: 0'));
+    assert.ok(line1.includes('Commited: 0'));
   });
 
   it('renders rate limit bars when rateLimits is present (with branchLabel)', () => {
     const output = render(withBranchAndRateLimits);
     const lines = output.split('\n');
     // line 2: session bar with actual percentage
-    expect(lines[1]).toContain('💬 Session [');
-    expect(lines[1]).toContain('] 40%');
-    expect(lines[1]).toContain('🗯 Cxt [███░░░░░░░] 30%');
-    expect(lines[1]).toContain('+12 -3');
+    assert.ok(lines[1].includes('💬 Session ['));
+    assert.ok(lines[1].includes('] 40%'));
+    assert.ok(lines[1].includes('🗯 Cxt [███░░░░░░░] 30%'));
+    assert.ok(lines[1].includes('+12 -3'));
     // line 3: weekly bar with actual percentage
-    expect(lines[2]).toContain('📅 Weekly [');
-    expect(lines[2]).toContain('] 70%');
-    expect(lines[2]).toContain('API Est: $4.56/mth');
+    assert.ok(lines[2].includes('📅 Weekly ['));
+    assert.ok(lines[2].includes('] 70%'));
+    assert.ok(lines[2].includes('API Est: $4.56/mth'));
   });
 
   it('renders N/A placeholders when rateLimits is absent (without branchLabel)', () => {
     const output = render(baseCtx);
     const lines = output.split('\n');
     // line 2: session bar shows N/A
-    expect(lines[1]).toContain('💬 Session [░░░░░░░░░░] N/A');
-    expect(lines[1]).toContain('🗯 Cxt [███░░░░░░░] 30%');
-    expect(lines[1]).toContain('+12 -3');
+    assert.ok(lines[1].includes('💬 Session [░░░░░░░░░░] N/A'));
+    assert.ok(lines[1].includes('🗯 Cxt [███░░░░░░░] 30%'));
+    assert.ok(lines[1].includes('+12 -3'));
     // line 3: weekly bar shows N/A
-    expect(lines[2]).toContain('📅 Weekly [░░░░░░░░░░] N/A');
-    expect(lines[2]).toContain('API Est: $4.56/mth');
+    assert.ok(lines[2].includes('📅 Weekly [░░░░░░░░░░] N/A'));
+    assert.ok(lines[2].includes('API Est: $4.56/mth'));
   });
 
   it('renders Cache XX% on line 3 when cacheHitPct is a number', () => {
     const output = render(withCacheHit);
     const line3 = output.split('\n')[2];
-    expect(line3).toContain('Cache 80%');
+    assert.ok(line3.includes('Cache 80%'));
   });
 
   it('renders Cache N/A on line 3 when cacheHitPct is null', () => {
     const output = render(baseCtx);
     const line3 = output.split('\n')[2];
-    expect(line3).toContain('Cache N/A');
+    assert.ok(line3.includes('Cache N/A'));
   });
 });
 
 describe('calcCacheHitPct(current_usage)', () => {
   it('returns 80 when cache_creation=2000 and cache_read=8000', () => {
-    expect(
+    assert.strictEqual(
       calcCacheHitPct({
         cache_creation_input_tokens: 2000,
         cache_read_input_tokens: 8000,
       }),
-    ).toBe(80);
+      80,
+    );
   });
 
   it('returns null when both cache_creation and cache_read are 0', () => {
-    expect(
+    assert.strictEqual(
       calcCacheHitPct({
         cache_creation_input_tokens: 0,
         cache_read_input_tokens: 0,
       }),
-    ).toBeNull();
+      null,
+    );
   });
 
   it('returns 0 when only cache_creation=5000 and cache_read=0', () => {
-    expect(
+    assert.strictEqual(
       calcCacheHitPct({
         cache_creation_input_tokens: 5000,
         cache_read_input_tokens: 0,
       }),
-    ).toBe(0);
+      0,
+    );
   });
 
   it('returns null when current_usage is null', () => {
-    expect(calcCacheHitPct(null)).toBeNull();
+    assert.strictEqual(calcCacheHitPct(null), null);
   });
 
   it('returns null when current_usage is undefined', () => {
-    expect(calcCacheHitPct(undefined)).toBeNull();
+    assert.strictEqual(calcCacheHitPct(undefined), null);
   });
 });

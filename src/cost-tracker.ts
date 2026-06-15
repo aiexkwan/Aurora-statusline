@@ -1,16 +1,18 @@
-import type { MonthlyCostCache } from './types';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
+import type { MonthlyCostCache } from './types.js';
 
 function getCurrentMonth(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-async function loadMonthlyCostCache(currentMonth: string, cachePath: string): Promise<MonthlyCostCache> {
+function loadMonthlyCostCache(currentMonth: string, cachePath: string): MonthlyCostCache {
   const empty: MonthlyCostCache = { month: currentMonth, sessions: {} };
   try {
-    const file = Bun.file(cachePath);
-    if (await file.exists()) {
-      const stored = (await file.json()) as MonthlyCostCache;
+    if (existsSync(cachePath)) {
+      const raw = readFileSync(cachePath, 'utf-8');
+      const stored = JSON.parse(raw) as MonthlyCostCache;
       if (stored.month === currentMonth) return stored;
     }
   } catch {
@@ -21,12 +23,13 @@ async function loadMonthlyCostCache(currentMonth: string, cachePath: string): Pr
 
 export async function trackSessionCost(sessionId: string, cost: number, cachePath: string): Promise<number> {
   const currentMonth = getCurrentMonth();
-  const cache = await loadMonthlyCostCache(currentMonth, cachePath);
+  const cache = loadMonthlyCostCache(currentMonth, cachePath);
   cache.sessions[sessionId] = cost;
   try {
-    await Bun.write(cachePath, JSON.stringify(cache));
+    mkdirSync(dirname(cachePath), { recursive: true });
+    writeFileSync(cachePath, JSON.stringify(cache));
   } catch {
     /* silent-ok: cache write failure → continue without persisting */
   }
-  return Object.values(cache.sessions).reduce((sum, v) => sum + v, 0);
+  return Object.values(cache.sessions).reduce((sum, sessionCost) => sum + sessionCost, 0);
 }

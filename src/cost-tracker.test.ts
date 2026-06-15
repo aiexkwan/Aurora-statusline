@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { writeFileSync } from 'fs';
 import { mkdtemp } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -35,7 +37,7 @@ describe('trackSessionCost', () => {
     const result = await trackSessionCost('session-B', 0.05, cachePath);
 
     // Assert
-    expect(result).toBeCloseTo(0.15, 5);
+    assert.ok(Math.abs(result - 0.15) < 1e-5);
   });
 
   it('resets sessions when the cache belongs to a previous month', async () => {
@@ -45,13 +47,13 @@ describe('trackSessionCost', () => {
       month: lastMonth(),
       sessions: { 'old-session-1': 5.0, 'old-session-2': 3.0 },
     };
-    await Bun.write(cachePath, JSON.stringify(staleCache));
+    writeFileSync(cachePath, JSON.stringify(staleCache));
 
     // Act — call with current month; old sessions must be discarded
     const result = await trackSessionCost('new-session', 0.2, cachePath);
 
     // Assert — only the new session's cost, not the stale total (8.20)
-    expect(result).toBeCloseTo(0.2, 5);
+    assert.ok(Math.abs(result - 0.2) < 1e-5);
   });
 
   it('falls back gracefully when the cache file does not exist', async () => {
@@ -61,13 +63,12 @@ describe('trackSessionCost', () => {
 
     // Act & Assert — must not throw; returns the current session cost
     let result: number | undefined;
-    expect(async () => {
+    await assert.doesNotReject(async () => {
       result = await trackSessionCost('session-X', 0.3, nonExistentCachePath);
-    }).not.toThrow();
+    });
 
-    // Give the async call a chance to complete even though the assertion above
-    // runs synchronously against the async function reference.
+    // Give the async call a chance to complete
     result = await trackSessionCost('session-X', 0.3, nonExistentCachePath);
-    expect(result).toBeCloseTo(0.3, 5);
+    assert.ok(Math.abs(result - 0.3) < 1e-5);
   });
 });

@@ -1,0 +1,9 @@
+{
+  "name": "aurora-statusline",
+  "version": "1.0.0",
+  "description": "Rich status line for Claude Code — model badge, git info, context window, rate limits, cache hit ratio, monthly cost",
+  "author": { "name": "Alex" },
+  "repository": "https://github.com/anthropics/aurora-statusline",
+  "license": "MIT",
+  "keywords": ["statusline", "status", "cost", "git", "rate-limit", "context-window"]
+}

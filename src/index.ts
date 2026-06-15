@@ -1,19 +1,19 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { join } from 'path';
 import { homedir } from 'os';
-import type { InputJSON } from './types';
-import { render } from './render';
-import { trackSessionCost } from './cost-tracker';
-import { getGitInfo } from './git';
-import { persistCtxSession, buildRenderContext } from './context';
+import type { InputJSON } from './types.js';
+import { render } from './render.js';
+import { trackSessionCost } from './cost-tracker.js';
+import { getGitInfo } from './git.js';
+import { persistCtxSession, buildRenderContext } from './context.js';
 
 const CACHE_DIR = process.env.STATUSLINE_CACHE_DIR ?? join(homedir(), '.claude');
 const MONTHLY_COST_PATH = join(CACHE_DIR, 'statusline-monthly-cost.json');
 
 async function readStdin(): Promise<InputJSON> {
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of Bun.stdin.stream()) {
-    chunks.push(chunk as Uint8Array);
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(chunk);
   }
   const raw = Buffer.concat(chunks).toString('utf-8');
   try {
