@@ -47,3 +47,23 @@ export interface RenderContext {
   rateLimits: InputJSON['rate_limits'];
   cacheHitPct: number | null;
 }
+
+export interface StatuslineFeatures {
+  git: boolean;
+  contextWindow: boolean;
+  rateLimits: boolean;
+  cacheHit: boolean;
+  sessionCost: boolean;
+  monthlyCost: boolean;
+  linesChanged: boolean;
+}
+
+export interface StatuslineDisplay {
+  colorMode: 'ansi' | 'plain';
+  barWidth: number;
+}
+
+export interface StatuslineConfig {
+  features: StatuslineFeatures;
+  display: StatuslineDisplay;
+}

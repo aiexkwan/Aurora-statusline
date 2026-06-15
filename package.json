@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc && echo '{\"type\":\"commonjs\"}' > dist/package.json",
     "start": "node dist/index.js",
+    "setup": "node dist/index.js --setup",
     "test": "node --test dist/*.test.js"
   },
   "engines": {

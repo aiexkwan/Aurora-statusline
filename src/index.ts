@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 import { join } from 'path';
-import { homedir } from 'os';
-import type { InputJSON } from './types.js';
+import type { InputJSON, StatuslineConfig } from './types.js';
 import { render } from './render.js';
 import { trackSessionCost } from './cost-tracker.js';
 import { getGitInfo } from './git.js';
 import { persistCtxSession, buildRenderContext } from './context.js';
+import { loadConfig, resetConfig, CONFIG_PATH, CACHE_DIR } from './config.js';
 
-const CACHE_DIR = process.env.STATUSLINE_CACHE_DIR ?? join(homedir(), '.claude');
 const MONTHLY_COST_PATH = join(CACHE_DIR, 'statusline-monthly-cost.json');
 
 async function readStdin(): Promise<InputJSON> {
@@ -25,6 +24,30 @@ async function readStdin(): Promise<InputJSON> {
 }
 
 async function main(): Promise<void> {
+  if (process.argv.includes('--setup')) {
+    const { runWizard } = await import('./wizard.js');
+    await runWizard();
+    return;
+  }
+  if (process.argv.includes('--reset')) {
+    resetConfig();
+    console.log(`Config reset to defaults. Removed: ${CONFIG_PATH}`);
+    return;
+  }
+  if (process.argv.includes('--config')) {
+    const config = loadConfig();
+    console.log(JSON.stringify(config, null, 2));
+    return;
+  }
+
+  let config: StatuslineConfig;
+  try {
+    config = loadConfig();
+  } catch (err) {
+    process.stderr.write(`Error loading statusline config: ${(err as Error).message}\n`);
+    process.exit(1);
+  }
+
   const input = await readStdin();
   const cwd = input.workspace?.current_dir ?? input.cwd ?? '';
   const ctxWindowSize = input.context_window?.context_window_size;
@@ -34,7 +57,7 @@ async function main(): Promise<void> {
   const monthlyCost = await trackSessionCost(input.session_id ?? 'unknown', input.cost?.total_cost_usd ?? 0, MONTHLY_COST_PATH);
 
   const ctx = buildRenderContext(input, gitInfo, monthlyCost);
-  process.stdout.write(render(ctx));
+  process.stdout.write(render(ctx, config));
 }
 
 main();
