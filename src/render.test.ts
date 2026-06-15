@@ -2,6 +2,8 @@ import { describe, it, expect } from 'bun:test';
 import { render, resolveModel } from './render';
 import type { RenderContext } from './types';
 
+import { calcCacheHitPct } from './context';
+
 // Shared fixtures
 const baseCtx: RenderContext = {
   projectName: 'my-project',
@@ -13,11 +15,17 @@ const baseCtx: RenderContext = {
   removed: 3,
   monthlyCost: 4.56,
   rateLimits: undefined,
+  cacheHitPct: null,
 };
 
 const withBranch: RenderContext = {
   ...baseCtx,
   git: { branchLabel: '🌱 feat/new-module', uncommittedCount: 2, committedCount: 1 },
+};
+
+const withCacheHit: RenderContext = {
+  ...baseCtx,
+  cacheHitPct: 80,
 };
 
 const withRateLimits: RenderContext = {
@@ -116,5 +124,54 @@ describe('render(ctx)', () => {
     // line 3: weekly bar shows N/A
     expect(lines[2]).toContain('📅 Weekly [░░░░░░░░░░] N/A');
     expect(lines[2]).toContain('API Est: $4.56/mth');
+  });
+
+  it('renders Cache XX% on line 3 when cacheHitPct is a number', () => {
+    const output = render(withCacheHit);
+    const line3 = output.split('\n')[2];
+    expect(line3).toContain('Cache 80%');
+  });
+
+  it('renders Cache N/A on line 3 when cacheHitPct is null', () => {
+    const output = render(baseCtx);
+    const line3 = output.split('\n')[2];
+    expect(line3).toContain('Cache N/A');
+  });
+});
+
+describe('calcCacheHitPct(current_usage)', () => {
+  it('returns 80 when cache_creation=2000 and cache_read=8000', () => {
+    expect(
+      calcCacheHitPct({
+        cache_creation_input_tokens: 2000,
+        cache_read_input_tokens: 8000,
+      }),
+    ).toBe(80);
+  });
+
+  it('returns null when both cache_creation and cache_read are 0', () => {
+    expect(
+      calcCacheHitPct({
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      }),
+    ).toBeNull();
+  });
+
+  it('returns 0 when only cache_creation=5000 and cache_read=0', () => {
+    expect(
+      calcCacheHitPct({
+        cache_creation_input_tokens: 5000,
+        cache_read_input_tokens: 0,
+      }),
+    ).toBe(0);
+  });
+
+  it('returns null when current_usage is null', () => {
+    expect(calcCacheHitPct(null)).toBeNull();
+  });
+
+  it('returns null when current_usage is undefined', () => {
+    expect(calcCacheHitPct(undefined)).toBeNull();
   });
 });

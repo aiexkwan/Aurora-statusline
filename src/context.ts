@@ -30,6 +30,14 @@ function calcCtxPct(input: InputJSON, ctxSize: number): number {
   return Math.floor((totalInput * 100) / ctxSize);
 }
 
+export function calcCacheHitPct(currentUsage: NonNullable<InputJSON['context_window']>['current_usage']): number | null {
+  if (!currentUsage) return null;
+  const cacheCreate = currentUsage.cache_creation_input_tokens ?? 0;
+  const cacheRead = currentUsage.cache_read_input_tokens ?? 0;
+  if (cacheCreate + cacheRead === 0) return null;
+  return Math.round((cacheRead / (cacheRead + cacheCreate)) * 100);
+}
+
 export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCost: number): RenderContext {
   const cwd = input.workspace?.current_dir ?? input.cwd ?? '';
   const ctxSize = input.context_window?.context_window_size ?? 200000;
@@ -45,5 +53,6 @@ export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCo
     removed: input.cost?.total_lines_removed ?? 0,
     monthlyCost,
     rateLimits: input.rate_limits,
+    cacheHitPct: calcCacheHitPct(input.context_window?.current_usage),
   };
 }

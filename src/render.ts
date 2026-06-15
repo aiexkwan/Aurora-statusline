@@ -31,7 +31,8 @@ export function render(ctx: RenderContext): string {
   const weeklyLabel = weeklyPct !== null ? `[${makeBar(weeklyPct)}] ${weeklyPct}%` : `[${makeBar(0)}] N/A`;
 
   const line2 = `💬 Session ${sessionLabel} | ${cxtSuffix}`;
-  const line3 = `📅 Weekly ${weeklyLabel} | ${costSuffix}`;
+  const cacheLabel = ctx.cacheHitPct !== null ? `Cache ${ctx.cacheHitPct}%` : 'Cache N/A';
+  const line3 = `📅 Weekly ${weeklyLabel} | 🎯 ${cacheLabel} | ${costSuffix}`;
 
   return `${line1}\n${line2}\n${line3}`;
 }
