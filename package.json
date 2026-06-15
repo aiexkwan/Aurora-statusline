@@ -7,7 +7,7 @@
     "aurora-statusline": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && echo '{\"type\":\"commonjs\"}' > dist/package.json",
     "start": "node dist/index.js",
     "test": "node --test dist/*.test.js"
   },
