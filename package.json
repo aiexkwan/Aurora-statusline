@@ -1,6 +1,6 @@
 {
   "name": "aurora-statusline",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
   "description": "Claude Code status line component — model badge, git info, context window, rate limits, monthly cost",
   "bin": {

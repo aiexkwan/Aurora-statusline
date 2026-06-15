@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.0
+
+### Added
+- Setup wizard to customize which information shows on your status line — run `aurora-statusline --setup` to choose which features to display
+- Each status line section can now be turned on or off independently: git info, context window, rate limits, cache hit ratio, session cost, monthly cost, and lines changed
+- Plain color mode option for terminals that don't support colored output
+- Adjustable progress bar width (5-20 characters) to fit different terminal sizes
+- Quick commands to manage your preferences: `--config` to view current settings, `--reset` to restore defaults
+
+### Changed
+- Configuration is now stored in the plugin's own directory instead of the global settings folder
+
 ## 2.1.0
 
 ### Added
