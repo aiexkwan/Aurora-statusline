@@ -181,35 +181,16 @@ describe('resetConfig() — deletes config file', () => {
   });
 });
 
-// ── STATUSLINE_CACHE_DIR validation ──────────────────────────────────────────
+// ── CONFIG_PATH uses project directory ────────────────────────────────────────
 
-describe('STATUSLINE_CACHE_DIR must be absolute', () => {
-  let origEnv: string | undefined;
-
-  before(() => {
-    origEnv = process.env.STATUSLINE_CACHE_DIR;
+describe('CONFIG_PATH points to project-local config/', () => {
+  it('CONFIG_PATH ends with config/statusline.json', () => {
+    const { CONFIG_PATH } = require('./config.js');
+    assert.ok(CONFIG_PATH.endsWith('config/statusline.json'), `CONFIG_PATH should end with config/statusline.json, got: "${CONFIG_PATH}"`);
   });
 
-  after(() => {
-    if (origEnv === undefined) {
-      delete process.env.STATUSLINE_CACHE_DIR;
-    } else {
-      process.env.STATUSLINE_CACHE_DIR = origEnv;
-    }
-  });
-
-  it('throws when calling loadConfig() without explicit path and env var is relative', () => {
-    process.env.STATUSLINE_CACHE_DIR = 'relative/not/absolute';
-    assert.throws(
-      () => loadConfig(),
-      (err: unknown) => {
-        assert.ok(err instanceof Error, 'expected Error instance');
-        assert.ok(
-          err.message.toLowerCase().includes('absolute') || err.message.toLowerCase().includes('statusline_cache_dir'),
-          `error message should mention absolute path or env var, got: "${(err as Error).message}"`,
-        );
-        return true;
-      },
-    );
+  it('CONFIG_PATH does not include .claude', () => {
+    const { CONFIG_PATH } = require('./config.js');
+    assert.ok(!CONFIG_PATH.includes('.claude'), `CONFIG_PATH should not contain .claude, got: "${CONFIG_PATH}"`);
   });
 });
