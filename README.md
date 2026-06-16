@@ -76,18 +76,59 @@ Claude Code ──stdin JSON──▶ Aurora Statusline ──stdout──▶ st
                           badge  status  tracker
 ```
 
+## Configuration
+
+Aurora stores its config at `config/statusline.json` within the project directory (project-local, not `~/.claude`).
+
+### CLI flags
+
+Run the statusline binary directly to manage your config:
+
+| Flag | Action |
+|---|---|
+| `--setup` | Launch the interactive setup wizard to configure features and display options |
+| `--config` | Print the current configuration as JSON |
+| `--reset` | Delete the config file and restore all defaults |
+
+Example:
+
+```bash
+node dist/index.js --setup
+node dist/index.js --config
+node dist/index.js --reset
+```
+
+### Feature Toggles
+
+Each segment can be independently enabled or disabled via the setup wizard (`--setup`).
+
+| Toggle key | What it controls |
+|---|---|
+| `git` | Branch name, uncommitted/committed counts |
+| `contextWindow` | Context window usage bar and percentage |
+| `rateLimits` | 5-hour session + 7-day weekly rate limit gauges |
+| `cacheHit` | Prompt cache hit ratio |
+| `sessionCost` | Current session API cost |
+| `monthlyCost` | Monthly estimated API cost |
+| `linesChanged` | Lines added/removed this session |
+
+### Color Modes
+
+| Option | Values | Description |
+|---|---|---|
+| `colorMode` | `ansi` / `plain` | `ansi` renders ANSI colored progress bars; `plain` outputs plain text |
+| `barWidth` | `5` – `20` | Controls the width of all progress bars (default: `10`) |
+
+### Environment Variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `STATUSLINE_CACHE_DIR` | `~/.claude` | Directory for monthly cost cache file |
+
 ## Requirements
 
 - **Node.js 18+** (ships with Claude Code)
 - **git** (for branch info)
-
-## Configuration
-
-Aurora reads these environment variables:
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `STATUSLINE_CACHE_DIR` | `~/.claude` | directory for monthly cost cache file |
 
 ## Project structure
 
@@ -105,11 +146,19 @@ Aurora-statusline/
 │   └── statusline-setup.md   # setup agent definition
 ├── src/
 │   ├── index.ts              # entry — reads stdin, orchestrates modules
-│   ├── render.ts             # pure function — formats 3-line output
+│   ├── types.ts              # TypeScript interfaces
+│   ├── render.ts             # pure function — formats 3-line output with ANSI colors
+│   ├── render.test.ts        # render tests (ANSI, colors, models, cache)
+│   ├── render-config.test.ts # feature toggle tests
 │   ├── context.ts            # context window calculations, cache hit ratio
 │   ├── cost-tracker.ts       # monthly cost accumulation across sessions
+│   ├── cost-tracker.test.ts  # monthly cost tests
 │   ├── git.ts                # git branch and status extraction
-│   └── types.ts              # TypeScript interfaces
+│   ├── config.ts             # configuration loading/saving/reset
+│   ├── config.test.ts        # config I/O tests
+│   └── wizard.ts             # interactive setup wizard
+├── config/
+│   └── statusline.json       # project-local config (auto-created on first --setup)
 ├── dist/                     # compiled output (npm run build)
 ├── package.json
 └── tsconfig.json
