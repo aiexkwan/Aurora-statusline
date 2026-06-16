@@ -30,6 +30,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Integration test
+        run: node --test dist/integration.test.js
+
       - name: End-to-end check
         run: |
           OUTPUT=$(echo '{"model":{"id":"claude-opus-4-6"},"cost":{"total_cost_usd":1.23,"total_lines_added":10,"total_lines_removed":2},"rate_limits":{"five_hour":{"used_percentage":30},"seven_day":{"used_percentage":50}}}' | node dist/index.js)
