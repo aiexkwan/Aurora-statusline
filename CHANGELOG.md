@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.1
+
+### Improved
+- Plugin marketplace listing now shows accurate version, description, and keywords, making it easier to find and install
+- README now documents all configuration options: setup wizard, feature toggles, color modes, and CLI commands
+
 ## 3.0.0
 
 ### Added

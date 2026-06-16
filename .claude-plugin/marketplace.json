@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "aurora-statusline",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "source": "./",
       "description": "Rich status line for Claude Code — model badge, git info, context window, rate limits, cache hit ratio, monthly cost, setup wizard, feature toggles, color modes",
       "author": { "name": "Alex" },
