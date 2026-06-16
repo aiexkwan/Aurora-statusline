@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.2
+
+### Improved
+- Session cost data files are now excluded from version control, preventing accidental sharing of usage information
+- Automated quality checks now verify that every status line section displays correctly and responds to your feature toggle settings, catching display issues before release
+
 ## 3.0.1
 
 ### Improved

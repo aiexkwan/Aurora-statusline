@@ -1,6 +1,6 @@
 {
   "name": "aurora-statusline",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Rich status line for Claude Code — model badge, git info, context window, rate limits, cache hit ratio, monthly cost, setup wizard, feature toggles, color modes",
   "author": { "name": "Alex" },
   "repository": "https://github.com/aiexkwan/Aurora-statusline",
