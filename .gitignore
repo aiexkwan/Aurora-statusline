@@ -3,3 +3,4 @@ dist/
 .DS_Store
 config/statusline.json
 store/
+.aurora-cli/specs/

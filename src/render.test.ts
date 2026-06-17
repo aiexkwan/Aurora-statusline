@@ -118,12 +118,12 @@ describe('render(ctx)', () => {
     const lines = output.split('\n');
     // line 2: session bar with actual percentage — strip ANSI for structural check
     assert.ok(lines[1].includes('💬 Session ['));
-    assert.ok(lines[1].includes('] ??m'));
-    assert.ok(stripAnsi(lines[1]).includes('🗯 Cxt [███░░░░░░░] 30%'));
+    assert.ok(lines[1].includes('] 40%'));
+    assert.ok(stripAnsi(lines[1]).includes('🗯 Ctx Win [███░░░░░░░] 30%'));
     assert.ok(lines[1].includes('+12 -3'));
-    // line 3: weekly bar with countdown (no resets_at → ??m)
+    // line 3: weekly bar with percentage (no resets_at → no countdown shown)
     assert.ok(lines[2].includes('📅 Weekly ['));
-    assert.ok(lines[2].includes('] ??m'));
+    assert.ok(lines[2].includes('] 70%'));
     assert.ok(lines[2].includes('API Est: $4.56/mth'));
   });
 
@@ -132,7 +132,7 @@ describe('render(ctx)', () => {
     const lines = output.split('\n');
     // line 2: session bar shows N/A — strip ANSI for structural check
     assert.ok(stripAnsi(lines[1]).includes('💬 Session [░░░░░░░░░░] N/A'));
-    assert.ok(stripAnsi(lines[1]).includes('🗯 Cxt [███░░░░░░░] 30%'));
+    assert.ok(stripAnsi(lines[1]).includes('🗯 Ctx Win [███░░░░░░░] 30%'));
     assert.ok(lines[1].includes('+12 -3'));
     // line 3: weekly bar shows N/A
     assert.ok(stripAnsi(lines[2]).includes('📅 Weekly [░░░░░░░░░░] N/A'));
@@ -246,8 +246,8 @@ describe('render() ANSI output', () => {
     // ctxPct: 30 → green
     const output = render(baseCtx);
     // The Cxt bar segment should contain a green code wrapping the bar
-    const cxtSegmentStart = output.indexOf('🗯 Cxt [');
-    assert.ok(cxtSegmentStart !== -1, 'expected 🗯 Cxt [ in output');
+    const cxtSegmentStart = output.indexOf('🗯 Ctx Win [');
+    assert.ok(cxtSegmentStart !== -1, 'expected 🗯 Ctx Win [ in output');
     const cxtSegment = output.slice(cxtSegmentStart);
     assert.ok(cxtSegment.includes(GREEN), `expected green ANSI in Cxt bar segment (ctxPct=30), got: ${JSON.stringify(cxtSegment)}`);
   });
@@ -306,11 +306,11 @@ describe('buildRenderContext() session cost', () => {
 });
 
 describe('formatCountdown(resetsAt)', () => {
-  it('returns "1h23m" when resetsAt is 83 minutes in the future', () => {
-    // Use regex to allow ±1 min timing variance: match 1h2Xm pattern
+  it('returns "1hr 23m" when resetsAt is 83 minutes in the future', () => {
+    // Use regex to allow ±1 min timing variance: match 1hr 2Xm pattern
     const resetsAt = new Date(Date.now() + 83 * 60 * 1000).toISOString();
     const result = formatCountdown(resetsAt);
-    assert.match(result, /^1h2\dm$/, `expected "1h2Xm" format for 83-min future, got: ${JSON.stringify(result)}`);
+    assert.match(result, /^1hr 2\dm$/, `expected "1hr 2Xm" format for 83-min future, got: ${JSON.stringify(result)}`);
   });
 
   it('returns "45m" when resetsAt is 45 minutes in the future', () => {
@@ -362,12 +362,11 @@ describe('render() line 2 session segment uses countdown format (not percentage)
     };
     const output = render(ctx);
     const line2 = output.split('\n')[1];
-    // Should contain a countdown like "1h23m" or "Xhxxm", NOT the bare "40%"
-    assert.ok(/\d+h\d+m/.test(line2) || /\d+m/.test(line2), `expected countdown format (e.g. 1h23m) in line 2 session segment, got: ${JSON.stringify(line2)}`);
-    assert.ok(!line2.includes('] 40%'), `expected line 2 NOT to contain "] 40%" percentage format, got: ${JSON.stringify(line2)}`);
+    assert.ok(line2.includes('40%'), `expected "40%" in line 2, got: ${JSON.stringify(line2)}`);
+    assert.ok(/Reset: \d+hr \d+m|Reset: \d+m/.test(line2), `expected Reset: countdown in line 2, got: ${JSON.stringify(line2)}`);
   });
 
-  it('line 2 session segment shows ??m when resets_at is absent', () => {
+  it('line 2 session segment shows only percentage when resets_at is absent', () => {
     const ctx: RenderContext = {
       ...baseCtx,
       rateLimits: {
@@ -377,7 +376,8 @@ describe('render() line 2 session segment uses countdown format (not percentage)
     };
     const output = render(ctx);
     const line2 = output.split('\n')[1];
-    assert.ok(line2.includes('??m'), `expected "??m" in line 2 when five_hour.resets_at is absent, got: ${JSON.stringify(line2)}`);
+    assert.ok(line2.includes('40%'), `expected "40%" in line 2, got: ${JSON.stringify(line2)}`);
+    assert.ok(!line2.includes('Reset:'), `expected no Reset: when resets_at absent, got: ${JSON.stringify(line2)}`);
   });
 });
 
@@ -393,12 +393,11 @@ describe('render() line 3 weekly segment uses countdown format (not percentage)'
     };
     const output = render(ctx);
     const line3 = output.split('\n')[2];
-    // Should contain a countdown like "45m", NOT the bare "70%"
-    assert.ok(/\d+m/.test(line3), `expected countdown format (e.g. 45m) in line 3 weekly segment, got: ${JSON.stringify(line3)}`);
-    assert.ok(!line3.includes('] 70%'), `expected line 3 NOT to contain "] 70%" percentage format, got: ${JSON.stringify(line3)}`);
+    assert.ok(line3.includes('70%'), `expected "70%" in line 3, got: ${JSON.stringify(line3)}`);
+    assert.ok(/Reset: \d+m/.test(line3), `expected Reset: countdown in line 3, got: ${JSON.stringify(line3)}`);
   });
 
-  it('line 3 weekly segment shows ??m when resets_at is absent', () => {
+  it('line 3 weekly segment shows only percentage when resets_at is absent', () => {
     const ctx: RenderContext = {
       ...baseCtx,
       rateLimits: {
@@ -408,7 +407,8 @@ describe('render() line 3 weekly segment uses countdown format (not percentage)'
     };
     const output = render(ctx);
     const line3 = output.split('\n')[2];
-    assert.ok(line3.includes('??m'), `expected "??m" in line 3 when seven_day.resets_at is absent, got: ${JSON.stringify(line3)}`);
+    assert.ok(line3.includes('70%'), `expected "70%" in line 3, got: ${JSON.stringify(line3)}`);
+    assert.ok(!line3.includes('Reset:'), `expected no Reset: when resets_at absent, got: ${JSON.stringify(line3)}`);
   });
 });
 

@@ -38,16 +38,23 @@ export function resolveModel(modelId: string | undefined, displayName: string): 
   return raw.startsWith('claude-') ? raw.slice(7) : raw;
 }
 
-export function formatCountdown(resetsAt: string | undefined): string {
+export function formatCountdown(resetsAt: number | string | undefined): string {
   if (resetsAt === undefined || resetsAt === '') return '??m';
-  const ms = Date.parse(resetsAt) - Date.now();
-  if (Number.isNaN(ms)) return '??m';
+  const target = typeof resetsAt === 'number' ? resetsAt * 1000 : Date.parse(resetsAt);
+  if (Number.isNaN(target)) return '??m';
+  const ms = target - Date.now();
   const totalMin = Math.floor(ms / 60000);
   if (totalMin < 1) return '<1m';
   if (totalMin < 60) return `${totalMin}m`;
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  return `${h}h${m}m`;
+  return `${h}hr ${m}m`;
+}
+
+function rateLimitLabel(pct: number | null, resetsAt: number | string | undefined): string {
+  if (pct === null) return 'N/A';
+  const cd = formatCountdown(resetsAt);
+  return cd !== '??m' ? `${pct}% Reset: ${cd}` : `${pct}%`;
 }
 
 function pushGitCounts(segs: string[], ctx: RenderContext, hide: boolean): void {
@@ -84,12 +91,11 @@ function buildLine2(ctx: RenderContext, feat: StatuslineConfig['features'] | und
   const segs: string[] = [];
   if (feat?.rateLimits !== false) {
     const sessionBar = `[${makeBar(sessionPct ?? 0, opts.barWidth, opts.colorMode)}]`;
-    const sessionLabel = sessionPct !== null ? formatCountdown(ctx.rateLimits?.five_hour?.resets_at) : 'N/A';
-    segs.push(`💬 Session ${sessionBar} ${sessionLabel}`);
+    segs.push(`💬 Session ${sessionBar} ${rateLimitLabel(sessionPct, ctx.rateLimits?.five_hour?.resets_at)}`);
   }
   if (feat?.contextWindow !== false) {
     const ctxBar = opts.hasConfig ? makeBar(ctx.ctxPct, opts.barWidth, opts.colorMode) : ctx.ctxBar;
-    segs.push(`🗯 Cxt [${ctxBar}] ${ctx.ctxPct}%`);
+    segs.push(`🗯 Ctx Win [${ctxBar}] ${ctx.ctxPct}%`);
   }
   if (feat?.linesChanged !== false) pushLinesChanged(segs, ctx, feat !== undefined && feat.smartHide !== false);
   return segs.join(' | ');
@@ -100,8 +106,7 @@ function buildLine3(ctx: RenderContext, feat: StatuslineConfig['features'] | und
   const segs: string[] = [];
   if (feat?.rateLimits !== false) {
     const weeklyBar = `[${makeBar(weeklyPct ?? 0, opts.barWidth, opts.colorMode)}]`;
-    const weeklyLabel = weeklyPct !== null ? formatCountdown(ctx.rateLimits?.seven_day?.resets_at) : 'N/A';
-    segs.push(`📅 Weekly ${weeklyBar} ${weeklyLabel}`);
+    segs.push(`📅 Weekly ${weeklyBar} ${rateLimitLabel(weeklyPct, ctx.rateLimits?.seven_day?.resets_at)}`);
   }
   if (feat?.cacheHit !== false) pushCacheHit(segs, ctx, feat !== undefined && feat.smartHide !== false);
   if (feat?.sessionCost !== false) segs.push(`Session: ${formatUSD(ctx.sessionCost)}`);

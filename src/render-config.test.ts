@@ -59,7 +59,7 @@ describe('render() backward compatibility', () => {
     assert.ok(output.includes('🌱'), `expected 🌱 in output`);
     assert.ok(output.includes('UnCommit:'), `expected UnCommit: in output`);
     assert.ok(output.includes('Commited:'), `expected Commited: in output`);
-    assert.ok(output.includes('🗯 Cxt'), `expected 🗯 Cxt in output`);
+    assert.ok(output.includes('🗯 Ctx Win'), `expected 🗯 Ctx Win in output`);
     assert.ok(output.includes('Session ['), `expected Session [ in output`);
     assert.ok(output.includes('Weekly ['), `expected Weekly [ in output`);
     assert.ok(output.includes('🎯'), `expected 🎯 in output`);
@@ -99,16 +99,16 @@ describe('feature toggle: git: false', () => {
   it('other segments still present when git=false', () => {
     const config = withFeature('git', false);
     const output = render(testCtx, config);
-    assert.ok(output.includes('🗯 Cxt'), `expected 🗯 Cxt still present when git=false`);
+    assert.ok(output.includes('🗯 Ctx Win'), `expected 🗯 Ctx Win still present when git=false`);
     assert.ok(output.includes('API Est:'), `expected API Est: still present when git=false`);
   });
 });
 
 describe('feature toggle: contextWindow: false', () => {
-  it('excludes 🗯 Cxt from output', () => {
+  it('excludes 🗯 Ctx Win from output', () => {
     const config = withFeature('contextWindow', false);
     const output = render(testCtx, config);
-    assert.ok(!output.includes('🗯 Cxt'), `expected no 🗯 Cxt when contextWindow=false, got: ${JSON.stringify(output)}`);
+    assert.ok(!output.includes('🗯 Ctx Win'), `expected no 🗯 Ctx Win when contextWindow=false, got: ${JSON.stringify(output)}`);
   });
 
   it('other segments still present when contextWindow=false', () => {
@@ -136,7 +136,7 @@ describe('feature toggle: rateLimits: false', () => {
     const config = withFeature('rateLimits', false);
     const output = render(testCtx, config);
     assert.ok(output.includes('🌱'), `expected 🌱 still present when rateLimits=false`);
-    assert.ok(output.includes('🗯 Cxt'), `expected 🗯 Cxt still present when rateLimits=false`);
+    assert.ok(output.includes('🗯 Ctx Win'), `expected 🗯 Ctx Win still present when rateLimits=false`);
   });
 });
 
@@ -208,7 +208,7 @@ describe('feature toggle: linesChanged: false', () => {
     const config = withFeature('linesChanged', false);
     const output = render(testCtx, config);
     assert.ok(output.includes('🌱'), `expected 🌱 still present when linesChanged=false`);
-    assert.ok(output.includes('🗯 Cxt'), `expected 🗯 Cxt still present when linesChanged=false`);
+    assert.ok(output.includes('🗯 Ctx Win'), `expected 🗯 Ctx Win still present when linesChanged=false`);
     assert.ok(output.includes('API Est:'), `expected API Est: still present when linesChanged=false`);
   });
 });
@@ -301,7 +301,7 @@ function configWithReasoningEffort(value: boolean): StatuslineConfig {
   return { ...allEnabled, features: features as StatuslineFeatures };
 }
 
-describe('feature toggle: reasoningEffort — output_style.name present', () => {
+describe('feature toggle: reasoningEffort — effort.level present', () => {
   it('Line 1 contains "⚡ high" when reasoningEffort context is "high"', () => {
     const ctx = ctxWithEffort('high');
     const line1 = stripAnsi(render(ctx).split('\n')[0]);

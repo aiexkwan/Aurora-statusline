@@ -13,8 +13,8 @@ export interface InputJSON {
     } | null;
   };
   rate_limits?: {
-    five_hour?: { used_percentage?: number; resets_at?: string };
-    seven_day?: { used_percentage?: number; resets_at?: string };
+    five_hour?: { used_percentage?: number; resets_at?: number | string };
+    seven_day?: { used_percentage?: number; resets_at?: number | string };
   };
   cost?: {
     total_cost_usd?: number;
@@ -22,7 +22,8 @@ export interface InputJSON {
     total_lines_removed?: number;
   };
   output_style?: { name?: string };
-  thinking?: { effort?: string };
+  thinking?: { effort?: string; enabled?: boolean };
+  effort?: { level?: string };
   agent?: { name?: string };
 }
 

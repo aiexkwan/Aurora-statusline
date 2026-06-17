@@ -59,7 +59,7 @@ export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCo
     sessionCost: input.cost?.total_cost_usd ?? 0,
     rateLimits: input.rate_limits,
     cacheHitPct: calcCacheHitPct(input.context_window?.current_usage),
-    reasoningEffort: input.output_style?.name ?? input.thinking?.effort ?? null,
+    reasoningEffort: input.effort?.level ?? input.thinking?.effort ?? null,
     agentName: input.agent?.name || null,
   };
 }

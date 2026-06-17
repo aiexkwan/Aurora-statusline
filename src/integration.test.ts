@@ -75,15 +75,15 @@ describe('integration: segment presence with full config', () => {
 
   it('line 2 contains session bar, context window bar, and linesChanged', () => {
     assert.ok(line2.includes('💬 Session ['), `expected session bar segment in line 2, got: ${JSON.stringify(line2)}`);
-    assert.ok(line2.includes('] ??m'), `expected session countdown in line 2, got: ${JSON.stringify(line2)}`);
-    assert.ok(line2.includes('🗯 Cxt ['), `expected context bar segment in line 2, got: ${JSON.stringify(line2)}`);
+    assert.ok(line2.includes('] 45%'), `expected session pct in line 2, got: ${JSON.stringify(line2)}`);
+    assert.ok(line2.includes('🗯 Ctx Win ['), `expected context bar segment in line 2, got: ${JSON.stringify(line2)}`);
     assert.ok(line2.includes('] 40%'), `expected ctx pct in line 2, got: ${JSON.stringify(line2)}`);
     assert.ok(line2.includes('+50 -10'), `expected linesChanged in line 2, got: ${JSON.stringify(line2)}`);
   });
 
   it('line 3 contains weekly bar, cacheHit, sessionCost, and monthlyCost', () => {
     assert.ok(line3.includes('📅 Weekly ['), `expected weekly bar segment in line 3, got: ${JSON.stringify(line3)}`);
-    assert.ok(line3.includes('] ??m'), `expected weekly countdown in line 3, got: ${JSON.stringify(line3)}`);
+    assert.ok(line3.includes('] 72%'), `expected weekly pct in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('Cache 65%'), `expected cacheHit in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('Session: $1.50'), `expected sessionCost in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('API Est: $12.34/mth'), `expected monthlyCost in line 3, got: ${JSON.stringify(line3)}`);
@@ -140,8 +140,8 @@ describe('integration: ANSI color format validation', () => {
   });
 
   it('context bar segment starts with ANSI escape and ends with ANSI reset', () => {
-    const match = output.match(/🗯 Cxt \[(\x1b\[.*?\x1b\[0m)\]/);
-    assert.ok(match !== null, `expected 🗯 Cxt [<ansi-bar>] pattern in output, got: ${JSON.stringify(output)}`);
+    const match = output.match(/🗯 Ctx Win \[(\x1b\[.*?\x1b\[0m)\]/);
+    assert.ok(match !== null, `expected 🗯 Ctx Win [<ansi-bar>] pattern in output, got: ${JSON.stringify(output)}`);
     const barContent = match[1];
     assert.ok(barContent.startsWith(ANSI_START), `bar must start with \\x1b[, got: ${JSON.stringify(barContent)}`);
     assert.ok(barContent.endsWith(ANSI_RESET), `bar must end with \\x1b[0m, got: ${JSON.stringify(barContent)}`);
@@ -187,11 +187,11 @@ describe('integration: feature toggle — git: false removes git segments from l
 });
 
 describe('integration: feature toggle — contextWindow: false removes context bar from line 2', () => {
-  it('🗯 Cxt segment does not appear in line 2 when contextWindow feature is disabled', () => {
+  it('🗯 Ctx Win segment does not appear in line 2 when contextWindow feature is disabled', () => {
     const config = disableFeature('contextWindow');
     const output = render(fullCtx, config);
     const line2 = output.split('\n')[1];
-    assert.ok(!line2.includes('🗯 Cxt'), `expected "🗯 Cxt" to be absent when contextWindow=false, got: ${JSON.stringify(line2)}`);
+    assert.ok(!line2.includes('🗯 Ctx Win'), `expected "🗯 Ctx Win" to be absent when contextWindow=false, got: ${JSON.stringify(line2)}`);
   });
 });
 
@@ -270,7 +270,7 @@ describe('integration: buildRenderContext → render full pipeline', () => {
 
     // Line 2 segments
     assert.ok(stripped.includes('💬 Session ['), `expected session bar in output, got: ${JSON.stringify(stripped)}`);
-    assert.ok(stripped.includes('🗯 Cxt ['), `expected ctx bar in output, got: ${JSON.stringify(stripped)}`);
+    assert.ok(stripped.includes('🗯 Ctx Win ['), `expected ctx bar in output, got: ${JSON.stringify(stripped)}`);
     assert.ok(stripped.includes('+100 -20'), `expected linesChanged in output, got: ${JSON.stringify(stripped)}`);
 
     // Line 3 segments
