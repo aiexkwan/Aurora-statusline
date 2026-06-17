@@ -1,13 +1,14 @@
 # Aurora Statusline
 
 > A rich, data-dense statusline for [Claude Code](https://claude.ai/code) — model badge,
-> git info, context window, rate limits, cache hit ratio, and monthly cost at a glance.
+> reasoning effort, agent name, git info, context window, rate limits with reset countdown,
+> cache hit ratio, and monthly cost at a glance.
 > Installs as a **Claude Code plugin** with zero manual config.
 
 ```text
-📁 my-project | opus-4-6 | 🌱 feat/new-module | UnCommit: 2 | Commited: 1
-💬 Session [███░░░░░░░] 35% | 🗯 Cxt [█████░░░░░] 50% | +156 -23
-📅 Weekly [██████░░░░] 62% | 🎯 Cache 75% | API Est: $3.42/mth
+📁 my-project | opus-4-6 | ⚡ high | 🤖 Explore | 🌱 feat/new-module | UnCommit: 2 | Commited: 1
+💬 Session [███░░░░░░░] 35% Reset: 3hr 40m | 🗯 Ctx Win [█████░░░░░] 50% | +156 -23
+📅 Weekly [██████░░░░] 62% Reset: 4d 12hr 0m | 🎯 Cache 75% | Session: $1.50 | API Est: $3.42/mth
 ```
 
 ## Install
@@ -51,13 +52,16 @@ Add to `~/.claude/settings.json`:
 |---|---|
 | `project` | current working directory name |
 | `model` | active Claude model ID (e.g. `opus-4-6`, `sonnet-4-6`) |
+| `reasoningEffort` | current reasoning effort level (e.g. `high`, `medium`, `low`) |
+| `agentName` | active subagent name when running (e.g. `Explore`, `Plan`) |
 | `git` | branch name, uncommitted and committed-ahead counts |
-| `session` | 5-hour rate limit gauge with percentage |
+| `session` | 5-hour rate limit gauge with percentage and reset countdown |
 | `context` | context window usage bar and percentage |
 | `lines` | lines added / removed this session |
-| `weekly` | 7-day rate limit gauge with percentage |
+| `weekly` | 7-day rate limit gauge with percentage and reset countdown |
 | `cache` | prompt cache hit ratio |
-| `cost` | estimated monthly API cost across all sessions |
+| `sessionCost` | current session API cost |
+| `monthlyCost` | estimated monthly API cost across all sessions |
 
 ## How it works
 
@@ -74,6 +78,8 @@ Claude Code ──stdin JSON──▶ Aurora Statusline ──stdout──▶ st
                             │       │       │
                           model   git    cost cache
                           badge  status  tracker
+                          effort  agent  countdown
+                          level   name   timer
 ```
 
 ## Configuration
@@ -102,15 +108,18 @@ node dist/index.js --reset
 
 Each segment can be independently enabled or disabled via the setup wizard (`--setup`).
 
-| Toggle key | What it controls |
-|---|---|
-| `git` | Branch name, uncommitted/committed counts |
-| `contextWindow` | Context window usage bar and percentage |
-| `rateLimits` | 5-hour session + 7-day weekly rate limit gauges |
-| `cacheHit` | Prompt cache hit ratio |
-| `sessionCost` | Current session API cost |
-| `monthlyCost` | Monthly estimated API cost |
-| `linesChanged` | Lines added/removed this session |
+| Toggle key | What it controls | Default |
+|---|---|---|
+| `git` | Branch name, uncommitted/committed counts | `true` |
+| `contextWindow` | Context window usage bar and percentage | `true` |
+| `rateLimits` | 5-hour session + 7-day weekly gauges with reset countdown | `true` |
+| `cacheHit` | Prompt cache hit ratio | `true` |
+| `sessionCost` | Current session API cost | `true` |
+| `monthlyCost` | Monthly estimated API cost | `true` |
+| `linesChanged` | Lines added/removed this session | `true` |
+| `reasoningEffort` | Reasoning effort level (high/medium/low) | `true` |
+| `agentName` | Active subagent name | `true` |
+| `smartHide` | Auto-hide zero-value segments (e.g. `UnCommit: 0`, `+0 -0`, `Cache N/A`) | `true` |
 
 ### Color Modes
 
