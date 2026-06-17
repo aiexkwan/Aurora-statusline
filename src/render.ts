@@ -38,40 +38,72 @@ export function resolveModel(modelId: string | undefined, displayName: string): 
   return raw.startsWith('claude-') ? raw.slice(7) : raw;
 }
 
-function formatBarLabel(pct: number | null, width: number, colorMode: ColorMode): string {
-  return `[${makeBar(pct ?? 0, width, colorMode)}] ${pct !== null ? `${pct}%` : 'N/A'}`;
+export function formatCountdown(resetsAt: string | undefined): string {
+  if (resetsAt === undefined || resetsAt === '') return '??m';
+  const ms = Date.parse(resetsAt) - Date.now();
+  if (Number.isNaN(ms)) return '??m';
+  const totalMin = Math.floor(ms / 60000);
+  if (totalMin < 1) return '<1m';
+  if (totalMin < 60) return `${totalMin}m`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}h${m}m`;
+}
+
+function pushGitCounts(segs: string[], ctx: RenderContext, hide: boolean): void {
+  if (!hide || ctx.git.uncommittedCount !== 0) segs.push(`UnCommit: ${ctx.git.uncommittedCount}`);
+  if (!hide || ctx.git.committedCount !== 0) segs.push(`Commited: ${ctx.git.committedCount}`);
+}
+
+function pushLinesChanged(segs: string[], ctx: RenderContext, hide: boolean): void {
+  if (!hide || ctx.added !== 0 || ctx.removed !== 0) segs.push(`+${ctx.added} -${ctx.removed}`);
+}
+
+function pushCacheHit(segs: string[], ctx: RenderContext, hide: boolean): void {
+  if (!hide || ctx.cacheHitPct !== null) {
+    const cacheLabel = ctx.cacheHitPct !== null ? `Cache ${ctx.cacheHitPct}%` : 'Cache N/A';
+    segs.push(`🎯 ${cacheLabel}`);
+  }
 }
 
 function buildLine1(ctx: RenderContext, feat: StatuslineConfig['features'] | undefined): string {
   const segs: string[] = [`📁 ${ctx.projectName}`, ctx.model];
-  if (feat?.git !== false && ctx.git.branchLabel) segs.push(ctx.git.branchLabel);
-  if (feat?.git !== false) {
-    segs.push(`UnCommit: ${ctx.git.uncommittedCount}`);
-    segs.push(`Commited: ${ctx.git.committedCount}`);
+  if (feat?.reasoningEffort !== false && ctx.reasoningEffort != null) {
+    segs.push(`⚡ ${ctx.reasoningEffort}`);
   }
+  if (feat?.agentName !== false && ctx.agentName) {
+    segs.push(`🤖 ${ctx.agentName}`);
+  }
+  if (feat?.git !== false && ctx.git.branchLabel) segs.push(ctx.git.branchLabel);
+  if (feat?.git !== false) pushGitCounts(segs, ctx, feat !== undefined && feat.smartHide !== false);
   return segs.join(' | ');
 }
 
 function buildLine2(ctx: RenderContext, feat: StatuslineConfig['features'] | undefined, opts: DisplayOpts): string {
   const sessionPct = ctx.rateLimits ? Math.round(ctx.rateLimits.five_hour?.used_percentage ?? 0) : null;
   const segs: string[] = [];
-  if (feat?.rateLimits !== false) segs.push(`💬 Session ${formatBarLabel(sessionPct, opts.barWidth, opts.colorMode)}`);
+  if (feat?.rateLimits !== false) {
+    const sessionBar = `[${makeBar(sessionPct ?? 0, opts.barWidth, opts.colorMode)}]`;
+    const sessionLabel = sessionPct !== null ? formatCountdown(ctx.rateLimits?.five_hour?.resets_at) : 'N/A';
+    segs.push(`💬 Session ${sessionBar} ${sessionLabel}`);
+  }
   if (feat?.contextWindow !== false) {
     const ctxBar = opts.hasConfig ? makeBar(ctx.ctxPct, opts.barWidth, opts.colorMode) : ctx.ctxBar;
     segs.push(`🗯 Cxt [${ctxBar}] ${ctx.ctxPct}%`);
   }
-  if (feat?.linesChanged !== false) segs.push(`+${ctx.added} -${ctx.removed}`);
+  if (feat?.linesChanged !== false) pushLinesChanged(segs, ctx, feat !== undefined && feat.smartHide !== false);
   return segs.join(' | ');
 }
 
 function buildLine3(ctx: RenderContext, feat: StatuslineConfig['features'] | undefined, opts: DisplayOpts): string {
   const weeklyPct = ctx.rateLimits ? Math.round(ctx.rateLimits.seven_day?.used_percentage ?? 0) : null;
   const segs: string[] = [];
-  if (feat?.rateLimits !== false) segs.push(`📅 Weekly ${formatBarLabel(weeklyPct, opts.barWidth, opts.colorMode)}`);
-  if (feat?.cacheHit !== false) {
-    const cacheLabel = ctx.cacheHitPct !== null ? `Cache ${ctx.cacheHitPct}%` : 'Cache N/A';
-    segs.push(`🎯 ${cacheLabel}`);
+  if (feat?.rateLimits !== false) {
+    const weeklyBar = `[${makeBar(weeklyPct ?? 0, opts.barWidth, opts.colorMode)}]`;
+    const weeklyLabel = weeklyPct !== null ? formatCountdown(ctx.rateLimits?.seven_day?.resets_at) : 'N/A';
+    segs.push(`📅 Weekly ${weeklyBar} ${weeklyLabel}`);
   }
+  if (feat?.cacheHit !== false) pushCacheHit(segs, ctx, feat !== undefined && feat.smartHide !== false);
   if (feat?.sessionCost !== false) segs.push(`Session: ${formatUSD(ctx.sessionCost)}`);
   if (feat?.monthlyCost !== false) segs.push(`API Est: ${formatUSD(ctx.monthlyCost)}/mth`);
   return segs.join(' | ');

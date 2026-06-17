@@ -12,6 +12,9 @@ export const DEFAULT_CONFIG: StatuslineConfig = {
     sessionCost: true,
     monthlyCost: true,
     linesChanged: true,
+    reasoningEffort: true,
+    agentName: true,
+    smartHide: true,
   },
   display: {
     colorMode: 'ansi',

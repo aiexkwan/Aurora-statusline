@@ -75,7 +75,7 @@ describe('integration: segment presence with full config', () => {
 
   it('line 2 contains session bar, context window bar, and linesChanged', () => {
     assert.ok(line2.includes('💬 Session ['), `expected session bar segment in line 2, got: ${JSON.stringify(line2)}`);
-    assert.ok(line2.includes('] 45%'), `expected session bar pct in line 2, got: ${JSON.stringify(line2)}`);
+    assert.ok(line2.includes('] ??m'), `expected session countdown in line 2, got: ${JSON.stringify(line2)}`);
     assert.ok(line2.includes('🗯 Cxt ['), `expected context bar segment in line 2, got: ${JSON.stringify(line2)}`);
     assert.ok(line2.includes('] 40%'), `expected ctx pct in line 2, got: ${JSON.stringify(line2)}`);
     assert.ok(line2.includes('+50 -10'), `expected linesChanged in line 2, got: ${JSON.stringify(line2)}`);
@@ -83,7 +83,7 @@ describe('integration: segment presence with full config', () => {
 
   it('line 3 contains weekly bar, cacheHit, sessionCost, and monthlyCost', () => {
     assert.ok(line3.includes('📅 Weekly ['), `expected weekly bar segment in line 3, got: ${JSON.stringify(line3)}`);
-    assert.ok(line3.includes('] 72%'), `expected weekly pct in line 3, got: ${JSON.stringify(line3)}`);
+    assert.ok(line3.includes('] ??m'), `expected weekly countdown in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('Cache 65%'), `expected cacheHit in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('Session: $1.50'), `expected sessionCost in line 3, got: ${JSON.stringify(line3)}`);
     assert.ok(line3.includes('API Est: $12.34/mth'), `expected monthlyCost in line 3, got: ${JSON.stringify(line3)}`);

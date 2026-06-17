@@ -2,7 +2,18 @@ import * as readline from 'readline';
 import { loadConfig, saveConfig, CONFIG_PATH } from './config.js';
 import type { StatuslineConfig } from './types.js';
 
-const FEATURE_KEYS: (keyof StatuslineConfig['features'])[] = ['git', 'contextWindow', 'rateLimits', 'cacheHit', 'sessionCost', 'monthlyCost', 'linesChanged'];
+const FEATURE_KEYS: (keyof StatuslineConfig['features'])[] = [
+  'git',
+  'contextWindow',
+  'rateLimits',
+  'cacheHit',
+  'sessionCost',
+  'monthlyCost',
+  'linesChanged',
+  'reasoningEffort',
+  'agentName',
+  'smartHide',
+];
 
 function ask(rl: readline.Interface, question: string): Promise<string> {
   return new Promise(resolve => rl.question(question, resolve));

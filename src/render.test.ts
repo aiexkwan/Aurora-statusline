@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { render, resolveModel, makeBar } from './render';
+import { render, resolveModel, makeBar, formatCountdown } from './render';
 import type { RenderContext } from './types';
 
 import { calcCacheHitPct, buildRenderContext } from './context';
@@ -118,12 +118,12 @@ describe('render(ctx)', () => {
     const lines = output.split('\n');
     // line 2: session bar with actual percentage — strip ANSI for structural check
     assert.ok(lines[1].includes('💬 Session ['));
-    assert.ok(lines[1].includes('] 40%'));
+    assert.ok(lines[1].includes('] ??m'));
     assert.ok(stripAnsi(lines[1]).includes('🗯 Cxt [███░░░░░░░] 30%'));
     assert.ok(lines[1].includes('+12 -3'));
-    // line 3: weekly bar with actual percentage
+    // line 3: weekly bar with countdown (no resets_at → ??m)
     assert.ok(lines[2].includes('📅 Weekly ['));
-    assert.ok(lines[2].includes('] 70%'));
+    assert.ok(lines[2].includes('] ??m'));
     assert.ok(lines[2].includes('API Est: $4.56/mth'));
   });
 
@@ -302,6 +302,113 @@ describe('buildRenderContext() session cost', () => {
     const input = { ...baseInput, cost: { total_lines_added: 5, total_lines_removed: 2 } };
     const ctx = buildRenderContext(input, baseGitInfo, 10);
     assert.strictEqual(ctx.sessionCost, 0);
+  });
+});
+
+describe('formatCountdown(resetsAt)', () => {
+  it('returns "1h23m" when resetsAt is 83 minutes in the future', () => {
+    // Use regex to allow ±1 min timing variance: match 1h2Xm pattern
+    const resetsAt = new Date(Date.now() + 83 * 60 * 1000).toISOString();
+    const result = formatCountdown(resetsAt);
+    assert.match(result, /^1h2\dm$/, `expected "1h2Xm" format for 83-min future, got: ${JSON.stringify(result)}`);
+  });
+
+  it('returns "45m" when resetsAt is 45 minutes in the future', () => {
+    // Allow ±1 min: match 44m or 45m
+    const resetsAt = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+    const result = formatCountdown(resetsAt);
+    assert.match(result, /^(44|45)m$/, `expected "44m" or "45m" for 45-min future, got: ${JSON.stringify(result)}`);
+  });
+
+  it('returns "<1m" when resetsAt is 30 seconds in the future', () => {
+    const resetsAt = new Date(Date.now() + 30 * 1000).toISOString();
+    const result = formatCountdown(resetsAt);
+    assert.strictEqual(result, '<1m', `expected "<1m" for 30-second future, got: ${JSON.stringify(result)}`);
+  });
+
+  it('returns "<1m" when resetsAt is an already-expired timestamp', () => {
+    const resetsAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const result = formatCountdown(resetsAt);
+    assert.strictEqual(result, '<1m', `expected "<1m" for expired timestamp, got: ${JSON.stringify(result)}`);
+  });
+
+  it('returns "??m" when resetsAt is undefined', () => {
+    const result = formatCountdown(undefined);
+    assert.strictEqual(result, '??m', `expected "??m" for undefined, got: ${JSON.stringify(result)}`);
+  });
+
+  it('returns "??m" when resetsAt is an invalid date string', () => {
+    const result = formatCountdown('not-a-date');
+    assert.strictEqual(result, '??m', `expected "??m" for invalid date string, got: ${JSON.stringify(result)}`);
+  });
+
+  it('never throws for any input value', () => {
+    assert.doesNotThrow(() => formatCountdown(undefined));
+    assert.doesNotThrow(() => formatCountdown('not-a-date'));
+    assert.doesNotThrow(() => formatCountdown(''));
+    assert.doesNotThrow(() => formatCountdown(new Date(Date.now() + 60 * 60 * 1000).toISOString()));
+  });
+});
+
+describe('render() line 2 session segment uses countdown format (not percentage)', () => {
+  it('line 2 session segment contains countdown string, not a bare percentage', () => {
+    const resetsAt = new Date(Date.now() + 83 * 60 * 1000).toISOString();
+    const ctx: RenderContext = {
+      ...baseCtx,
+      rateLimits: {
+        five_hour: { used_percentage: 40, resets_at: resetsAt },
+        seven_day: { used_percentage: 70 },
+      },
+    };
+    const output = render(ctx);
+    const line2 = output.split('\n')[1];
+    // Should contain a countdown like "1h23m" or "Xhxxm", NOT the bare "40%"
+    assert.ok(/\d+h\d+m/.test(line2) || /\d+m/.test(line2), `expected countdown format (e.g. 1h23m) in line 2 session segment, got: ${JSON.stringify(line2)}`);
+    assert.ok(!line2.includes('] 40%'), `expected line 2 NOT to contain "] 40%" percentage format, got: ${JSON.stringify(line2)}`);
+  });
+
+  it('line 2 session segment shows ??m when resets_at is absent', () => {
+    const ctx: RenderContext = {
+      ...baseCtx,
+      rateLimits: {
+        five_hour: { used_percentage: 40 },
+        seven_day: { used_percentage: 70 },
+      },
+    };
+    const output = render(ctx);
+    const line2 = output.split('\n')[1];
+    assert.ok(line2.includes('??m'), `expected "??m" in line 2 when five_hour.resets_at is absent, got: ${JSON.stringify(line2)}`);
+  });
+});
+
+describe('render() line 3 weekly segment uses countdown format (not percentage)', () => {
+  it('line 3 weekly segment contains countdown string, not a bare percentage', () => {
+    const resetsAt = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+    const ctx: RenderContext = {
+      ...baseCtx,
+      rateLimits: {
+        five_hour: { used_percentage: 40 },
+        seven_day: { used_percentage: 70, resets_at: resetsAt },
+      },
+    };
+    const output = render(ctx);
+    const line3 = output.split('\n')[2];
+    // Should contain a countdown like "45m", NOT the bare "70%"
+    assert.ok(/\d+m/.test(line3), `expected countdown format (e.g. 45m) in line 3 weekly segment, got: ${JSON.stringify(line3)}`);
+    assert.ok(!line3.includes('] 70%'), `expected line 3 NOT to contain "] 70%" percentage format, got: ${JSON.stringify(line3)}`);
+  });
+
+  it('line 3 weekly segment shows ??m when resets_at is absent', () => {
+    const ctx: RenderContext = {
+      ...baseCtx,
+      rateLimits: {
+        five_hour: { used_percentage: 40 },
+        seven_day: { used_percentage: 70 },
+      },
+    };
+    const output = render(ctx);
+    const line3 = output.split('\n')[2];
+    assert.ok(line3.includes('??m'), `expected "??m" in line 3 when seven_day.resets_at is absent, got: ${JSON.stringify(line3)}`);
   });
 });
 

@@ -38,13 +38,17 @@ export function calcCacheHitPct(currentUsage: NonNullable<InputJSON['context_win
   return Math.round((cacheRead / (cacheRead + cacheCreate)) * 100);
 }
 
-export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCost: number): RenderContext {
+function resolveProjectName(input: InputJSON): string {
   const cwd = input.workspace?.current_dir ?? input.cwd ?? '';
+  return cwd.split('/').filter(Boolean).at(-1) ?? '';
+}
+
+export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCost: number): RenderContext {
   const ctxSize = input.context_window?.context_window_size ?? 200000;
   const ctxPct = calcCtxPct(input, ctxSize);
 
   return {
-    projectName: cwd.split('/').filter(Boolean).at(-1) ?? '',
+    projectName: resolveProjectName(input),
     model: resolveModel(input.model?.id, input.model?.display_name ?? 'Unknown'),
     git: gitInfo,
     ctxBar: makeBar(ctxPct),
@@ -55,5 +59,7 @@ export function buildRenderContext(input: InputJSON, gitInfo: GitInfo, monthlyCo
     sessionCost: input.cost?.total_cost_usd ?? 0,
     rateLimits: input.rate_limits,
     cacheHitPct: calcCacheHitPct(input.context_window?.current_usage),
+    reasoningEffort: input.output_style?.name ?? input.thinking?.effort ?? null,
+    agentName: input.agent?.name || null,
   };
 }

@@ -21,6 +21,9 @@ export interface InputJSON {
     total_lines_added?: number;
     total_lines_removed?: number;
   };
+  output_style?: { name?: string };
+  thinking?: { effort?: string };
+  agent?: { name?: string };
 }
 
 export interface MonthlyCostCache {
@@ -46,6 +49,8 @@ export interface RenderContext {
   sessionCost: number;
   rateLimits: InputJSON['rate_limits'];
   cacheHitPct: number | null;
+  reasoningEffort?: string | null;
+  agentName?: string | null;
 }
 
 export interface StatuslineFeatures {
@@ -56,6 +61,9 @@ export interface StatuslineFeatures {
   sessionCost: boolean;
   monthlyCost: boolean;
   linesChanged: boolean;
+  reasoningEffort?: boolean;
+  agentName?: boolean;
+  smartHide?: boolean;
 }
 
 export interface StatuslineDisplay {

@@ -287,3 +287,266 @@ describe("makeBar() colorMode 'plain'", () => {
     assert.ok(barChars.length > 0, `expected bar chars in plain mode, got: ${JSON.stringify(bar)}`);
   });
 });
+
+type ExtendedRenderContext = RenderContext & { reasoningEffort?: string | null };
+
+function ctxWithEffort(effort: string | null): RenderContext {
+  const extended: ExtendedRenderContext = { ...testCtx, reasoningEffort: effort };
+  return extended as unknown as RenderContext;
+}
+
+function configWithReasoningEffort(value: boolean): StatuslineConfig {
+  const features = { ...allEnabled.features } as StatuslineFeatures & { reasoningEffort?: boolean };
+  features.reasoningEffort = value;
+  return { ...allEnabled, features: features as StatuslineFeatures };
+}
+
+describe('feature toggle: reasoningEffort — output_style.name present', () => {
+  it('Line 1 contains "⚡ high" when reasoningEffort context is "high"', () => {
+    const ctx = ctxWithEffort('high');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(line1.includes('⚡ high'), `expected "⚡ high" in Line 1, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 segment is separated by " | " from adjacent segments', () => {
+    const ctx = ctxWithEffort('high');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(line1.includes(' | ⚡ high') || line1.includes('⚡ high | '), `expected "⚡ high" surrounded by " | " separators, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature toggle: reasoningEffort — thinking.effort fallback', () => {
+  it('Line 1 contains "⚡ medium" when reasoningEffort context is "medium"', () => {
+    const ctx = ctxWithEffort('medium');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(line1.includes('⚡ medium'), `expected "⚡ medium" in Line 1, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature toggle: reasoningEffort — absent (null)', () => {
+  it('Line 1 does not contain "⚡" when reasoningEffort context is null', () => {
+    const ctx = ctxWithEffort(null);
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(!line1.includes('⚡'), `expected no "⚡" in Line 1 when reasoningEffort is null, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 does not contain "⚡" when testCtx has no reasoningEffort field', () => {
+    const line1 = stripAnsi(render(testCtx).split('\n')[0]);
+    assert.ok(!line1.includes('⚡'), `expected no "⚡" in baseline Line 1, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature toggle: reasoningEffort: false — toggle disabled', () => {
+  it('Line 1 does not contain "⚡" when reasoningEffort toggle is false even if context has value', () => {
+    const ctx = ctxWithEffort('high');
+    const config = configWithReasoningEffort(false);
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(!line1.includes('⚡'), `expected no "⚡" when reasoningEffort=false, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('other Line 1 segments still present when reasoningEffort=false', () => {
+    const ctx = ctxWithEffort('high');
+    const config = configWithReasoningEffort(false);
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(line1.includes('📁'), `expected 📁 still present when reasoningEffort=false`);
+    assert.ok(line1.includes('opus-4-6'), `expected model name still present when reasoningEffort=false`);
+  });
+});
+
+type ExtendedRenderContextWithAgent = RenderContext & { agentName?: string | null };
+
+function ctxWithAgentName(name: string | null): RenderContext {
+  const extended: ExtendedRenderContextWithAgent = { ...testCtx, agentName: name };
+  return extended as unknown as RenderContext;
+}
+
+function configWithAgentName(value: boolean): StatuslineConfig {
+  const features = { ...allEnabled.features } as StatuslineFeatures & { agentName?: boolean };
+  features.agentName = value;
+  return { ...allEnabled, features: features as StatuslineFeatures };
+}
+
+describe('feature: agentName — name present', () => {
+  it('Line 1 contains "🤖 Explore" when agentName context is "Explore"', () => {
+    const ctx = ctxWithAgentName('Explore');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(line1.includes('🤖 Explore'), `expected "🤖 Explore" in Line 1, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 segment "🤖 Explore" is separated by " | " from adjacent segments', () => {
+    const ctx = ctxWithAgentName('Explore');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(line1.includes(' | 🤖 Explore') || line1.includes('🤖 Explore | '), `expected "🤖 Explore" surrounded by " | " separators, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature: agentName — name absent (null)', () => {
+  it('Line 1 does not contain "🤖" when agentName context is null', () => {
+    const ctx = ctxWithAgentName(null);
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(!line1.includes('🤖'), `expected no "🤖" in Line 1 when agentName is null, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 does not contain "🤖" when testCtx has no agentName field', () => {
+    const line1 = stripAnsi(render(testCtx).split('\n')[0]);
+    assert.ok(!line1.includes('🤖'), `expected no "🤖" in baseline Line 1, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature: agentName — empty string treated as null', () => {
+  it('Line 1 does not contain "🤖" when agentName is empty string', () => {
+    const ctx = ctxWithAgentName('');
+    const line1 = stripAnsi(render(ctx).split('\n')[0]);
+    assert.ok(!line1.includes('🤖'), `expected no "🤖" in Line 1 when agentName is empty string, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('feature toggle: agentName: false — toggle disabled', () => {
+  it('Line 1 does not contain "🤖" when agentName toggle is false even if context has value', () => {
+    const ctx = ctxWithAgentName('Explore');
+    const config = configWithAgentName(false);
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(!line1.includes('🤖'), `expected no "🤖" when agentName=false, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('other Line 1 segments still present when agentName=false', () => {
+    const ctx = ctxWithAgentName('Explore');
+    const config = configWithAgentName(false);
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(line1.includes('📁'), `expected 📁 still present when agentName=false`);
+    assert.ok(line1.includes('opus-4-6'), `expected model name still present when agentName=false`);
+  });
+});
+
+type StatuslineConfigWithSmartHide = Omit<StatuslineConfig, 'features'> & {
+  features: StatuslineFeatures & { smartHide?: boolean };
+};
+
+function makeSmartHideConfig(smartHide: boolean, overrides: Partial<StatuslineFeatures> = {}): StatuslineConfigWithSmartHide {
+  return {
+    features: { ...allEnabled.features, ...overrides, smartHide },
+    display: allEnabled.display,
+  };
+}
+
+describe('smartHide — Line 1: uncommittedCount=0, committedCount=5, smartHide=true', () => {
+  const ctx: RenderContext = {
+    ...testCtx,
+    git: { branchLabel: '🌱 feature/test', uncommittedCount: 0, committedCount: 5 },
+  };
+
+  it('Line 1 does not contain "UnCommit: 0" when uncommittedCount=0 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(!line1.includes('UnCommit: 0'), `expected no "UnCommit: 0" when uncommittedCount=0 and smartHide=true, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 contains "Commited: 5" when committedCount=5 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(line1.includes('Commited: 5'), `expected "Commited: 5" in Line 1 when committedCount=5 and smartHide=true, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('smartHide — Line 1: uncommittedCount=3, committedCount=0, smartHide=true', () => {
+  const ctx: RenderContext = {
+    ...testCtx,
+    git: { branchLabel: '🌱 feature/test', uncommittedCount: 3, committedCount: 0 },
+  };
+
+  it('Line 1 contains "UnCommit: 3" when uncommittedCount=3 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(line1.includes('UnCommit: 3'), `expected "UnCommit: 3" in Line 1 when uncommittedCount=3 and smartHide=true, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 does not contain "Commited: 0" when committedCount=0 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctx, config).split('\n')[0]);
+    assert.ok(!line1.includes('Commited: 0'), `expected no "Commited: 0" when committedCount=0 and smartHide=true, got: ${JSON.stringify(line1)}`);
+  });
+});
+
+describe('smartHide — Line 2: added=0, removed=0, smartHide=true', () => {
+  const ctx: RenderContext = { ...testCtx, added: 0, removed: 0 };
+
+  it('Line 2 does not contain "+0 -0" when added=0 removed=0 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line2 = stripAnsi(render(ctx, config).split('\n')[1]);
+    assert.ok(!line2.includes('+0 -0'), `expected no "+0 -0" when added=0 removed=0 and smartHide=true, got: ${JSON.stringify(line2)}`);
+  });
+});
+
+describe('smartHide — Line 2: added=1, removed=0, smartHide=true', () => {
+  const ctx: RenderContext = { ...testCtx, added: 1, removed: 0 };
+
+  it('Line 2 contains "+1 -0" when added=1 removed=0 and smartHide=true (non-zero not hidden)', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line2 = stripAnsi(render(ctx, config).split('\n')[1]);
+    assert.ok(line2.includes('+1 -0'), `expected "+1 -0" in Line 2 when added=1 removed=0 and smartHide=true, got: ${JSON.stringify(line2)}`);
+  });
+});
+
+describe('smartHide — Line 3: cacheHitPct=null, smartHide=true', () => {
+  const ctx: RenderContext = { ...testCtx, cacheHitPct: null };
+
+  it('Line 3 does not contain "Cache" when cacheHitPct=null and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line3 = stripAnsi(render(ctx, config).split('\n')[2]);
+    assert.ok(!line3.includes('Cache'), `expected no "Cache" in Line 3 when cacheHitPct=null and smartHide=true, got: ${JSON.stringify(line3)}`);
+  });
+});
+
+describe('smartHide — Line 3: cacheHitPct=75, smartHide=true', () => {
+  const ctx: RenderContext = { ...testCtx, cacheHitPct: 75 };
+
+  it('Line 3 contains "Cache 75%" when cacheHitPct=75 and smartHide=true', () => {
+    const config = makeSmartHideConfig(true) as unknown as StatuslineConfig;
+    const line3 = stripAnsi(render(ctx, config).split('\n')[2]);
+    assert.ok(line3.includes('Cache 75%'), `expected "Cache 75%" in Line 3 when cacheHitPct=75 and smartHide=true, got: ${JSON.stringify(line3)}`);
+  });
+});
+
+describe('smartHide — cacheHit: false takes priority over smartHide: true', () => {
+  const ctx: RenderContext = { ...testCtx, cacheHitPct: null };
+
+  it('Line 3 does not contain "Cache" when cacheHit=false regardless of smartHide', () => {
+    const config = makeSmartHideConfig(true, { cacheHit: false }) as unknown as StatuslineConfig;
+    const line3 = stripAnsi(render(ctx, config).split('\n')[2]);
+    assert.ok(!line3.includes('Cache'), `expected no "Cache" when cacheHit=false, got: ${JSON.stringify(line3)}`);
+  });
+});
+
+describe('smartHide=false — backward compat: all zero/null values still rendered', () => {
+  const ctxAllZero: RenderContext = {
+    ...testCtx,
+    git: { branchLabel: '🌱 feature/test', uncommittedCount: 0, committedCount: 0 },
+    added: 0,
+    removed: 0,
+    cacheHitPct: null,
+  };
+
+  it('Line 1 contains "UnCommit: 0" when uncommittedCount=0 and smartHide=false', () => {
+    const config = makeSmartHideConfig(false) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctxAllZero, config).split('\n')[0]);
+    assert.ok(line1.includes('UnCommit: 0'), `expected "UnCommit: 0" when smartHide=false, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 1 contains "Commited: 0" when committedCount=0 and smartHide=false', () => {
+    const config = makeSmartHideConfig(false) as unknown as StatuslineConfig;
+    const line1 = stripAnsi(render(ctxAllZero, config).split('\n')[0]);
+    assert.ok(line1.includes('Commited: 0'), `expected "Commited: 0" when smartHide=false, got: ${JSON.stringify(line1)}`);
+  });
+
+  it('Line 2 contains "+0 -0" when added=0 removed=0 and smartHide=false', () => {
+    const config = makeSmartHideConfig(false) as unknown as StatuslineConfig;
+    const line2 = stripAnsi(render(ctxAllZero, config).split('\n')[1]);
+    assert.ok(line2.includes('+0 -0'), `expected "+0 -0" when smartHide=false, got: ${JSON.stringify(line2)}`);
+  });
+
+  it('Line 3 contains "Cache N/A" when cacheHitPct=null and smartHide=false', () => {
+    const config = makeSmartHideConfig(false) as unknown as StatuslineConfig;
+    const line3 = stripAnsi(render(ctxAllZero, config).split('\n')[2]);
+    assert.ok(line3.includes('Cache N/A'), `expected "Cache N/A" when smartHide=false, got: ${JSON.stringify(line3)}`);
+  });
+});
