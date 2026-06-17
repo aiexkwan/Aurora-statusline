@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0
+
+### Added
+- Reasoning effort level now shows on the status line, so you can see how much thinking power your current session is using
+- Agent name display — when a subagent is active (e.g. Explore, Plan), its name appears on the first line
+- Rate limit countdown timer showing how long until your session or weekly limit resets (e.g. "Reset: 4hr 40m"), displayed alongside the existing percentage bar
+- Smart hiding — zero-value segments like "UnCommit: 0" or "+0 -0" are automatically hidden to reduce clutter
+
+### Changed
+- Context window label changed from "Cxt" to "Ctx Win" for clarity
+
+### Fixed
+- Rate limit reset timer now works correctly with the actual data format
+
 ## 3.0.2
 
 ### Improved
