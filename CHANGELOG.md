@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.1
+
+### Improved
+- Remove unused `export` from `formatUSD` in `src/render.ts` — function is internal-only and was never imported externally
+- Consolidate `CACHE_DIR` definition: `src/context.ts` now imports from `./config` instead of re-declaring locally, removing the duplicate constant and its orphaned `homedir` import from `os`
+
 ## 3.1.0
 
 ### Added
