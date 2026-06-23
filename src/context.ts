@@ -1,10 +1,9 @@
 import { join } from 'path';
-import { homedir } from 'os';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import type { InputJSON, GitInfo, RenderContext } from './types';
 import { makeBar, resolveModel } from './render';
+import { CACHE_DIR } from './config';
 
-const CACHE_DIR = process.env.STATUSLINE_CACHE_DIR ?? join(homedir(), '.claude');
 const CTX_SESSION_DIR = join(CACHE_DIR, '.ctx-session');
 
 export function persistCtxSession(sessionId: string | undefined, ctxSize: number, hasCtxWindowSize: boolean): void {

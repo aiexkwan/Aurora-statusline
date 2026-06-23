@@ -1,6 +1,0 @@
-{
-  "db-security-gate": "off",
-  "migration-guide-gate": "off",
-  "tdd-red-gate": "strict",
-  "tdd-green-gate": "strict"
-}

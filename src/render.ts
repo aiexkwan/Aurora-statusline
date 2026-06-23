@@ -29,7 +29,7 @@ export function makeBar(pct: number, width = 10, colorMode: ColorMode = 'ansi'):
   return `${color}${bar}${reset}`;
 }
 
-export function formatUSD(n: number): string {
+function formatUSD(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
